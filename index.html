@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Agendamento - Fazer Agendamento</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .calendar {
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      max-width: 300px;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.25rem;
+      text-align: center;
+    }
+    .calendar-day {
+      padding: 0.5rem;
+      cursor: pointer;
+      border-radius: 0.25rem;
+    }
+    .calendar-day:hover {
+      background: #e5e7eb;
+    }
+    .calendar-day.available {
+      font-weight: bold;
+    }
+    .calendar-day.selected {
+      background: #2563eb;
+      color: white;
+    }
+    .calendar-day.disabled {
+      color: #d1d5db;
+      cursor: not-allowed;
+    }
+    .service-group {
+      margin-bottom: 1rem;
+    }
+    .service-group h4 {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4">
+    <!-- Navegação -->
+    <nav class="bg-blue-600 p-4 rounded-lg mb-6">
+      <ul class="flex space-x-4 text-white">
+        <li><a href="index.html" class="hover:underline font-bold">Fazer Agendamento</a></li>
+        <li><a href="admin.html" class="hover:underline">Admin</a></li>
+      </ul>
+    </nav>
+
+    <!-- Tela de Login -->
+    <div id="login" class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4">Login</h2>
+      <div class="mb-4">
+        <label for="full-name" class="block text-sm font-medium text-gray-700">Nome Completo:</label>
+        <input type="text" id="full-name" class="mt-1 p-2 border rounded-lg w-full" required>
+      </div>
+      <div class="mb-4">
+        <label for="cpf" class="block text-sm font-medium text-gray-700">CPF:</label>
+        <input type="text" id="cpf" class="mt-1 p-2 border rounded-lg w-full" placeholder="123.456.789-09" required>
+      </div>
+      <div class="mb-4">
+        <label for="phone" class="block text-sm font-medium text-gray-700">Número de Contato:</label>
+        <input type="text" id="phone" class="mt-1 p-2 border rounded-lg w-full" placeholder="(11) 91234-5678" required>
+      </div>
+      <button onclick="loginUser()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Entrar</button>
+    </div>
+
+    <!-- Tela de Agendamento -->
+    <div id="agendamento" class="hidden bg-white p-6 rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Fazer Agendamento</h2>
+        <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Sair</button>
+      </div>
+      <div class="mb-4">
+        <p class="text-sm text-gray-700"><strong>Nome:</strong> <span id="user-full-name"></span></p>
+        <p class="text-sm text-gray-700"><strong>CPF:</strong> <span id="user-cpf"></span></p>
+        <p class="text-sm text-gray-700"><strong>Número de Contato:</strong> <span id="user-phone"></span></p>
+      </div>
+      <!-- Seção de Serviços -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Serviços:</label>
+        <!-- Cabelo -->
+        <div class="service-group">
+          <h4>Cabelo</h4>
+          <div class="space-y-2">
+            <div>
+              <input type="checkbox" id="combo-1-social-barba-sobrancelha-gratis" name="services" value="Combo 1: Social+Barba (Sobrancelha Grátis) - 45min">
+              <label for="combo-1-social-barba-sobrancelha-gratis" class="ml-2">Combo 1: Social+Barba (Sobrancelha Grátis) - 45min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="combo-2-degrade-barba-sobrancelha-gratis" name="services" value="Combo 2: Degradê+Barba (Sobrancelha Grátis) - 45min">
+              <label for="combo-2-degrade-barba-sobrancelha-gratis" class="ml-2">Combo 2: Degradê+Barba (Sobrancelha Grátis) - 45min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="corte-degrade" name="services" value="Corte Degradê - 30min">
+              <label for="corte-degrade" class="ml-2">Corte Degradê - 30min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="corte-feminino" name="services" value="Corte Feminino - 40min">
+              <label for="corte-feminino" class="ml-2">Corte Feminino - 40min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="corte-navalhado" name="services" value="Corte Navalhado - 45min">
+              <label for="corte-navalhado" class="ml-2">Corte Navalhado - 45min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="corte-simples" name="services" value="Corte Simples - 15min">
+              <label for="corte-simples" class="ml-2">Corte Simples - 15min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="corte-social" name="services" value="Corte Social - 20min">
+              <label for="corte-social" class="ml-2">Corte Social - 20min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="pezinho" name="services" value="Pezinho - 10min">
+              <label for="pezinho" class="ml-2">Pezinho - 10min</label>
+            </div>
+          </div>
+        </div>
+        <!-- Barba -->
+        <div class="service-group">
+          <h4>Barba</h4>
+          <div class="space-y-2">
+            <div>
+              <input type="checkbox" id="barba" name="services" value="Barba - 20min">
+              <label for="barba" class
+
+="ml-2">Barba - 20min</label>
+            </div>
+          </div>
+        </div>
+        <!-- Estética Facial -->
+        <div class="service-group">
+          <h4>Estética Facial</h4>
+          <div class="space-y-2">
+            <div>
+              <input type="checkbox" id="sobrancelha" name="services" value="Sobrancelha - 05min">
+              <label for="sobrancelha" class="ml-2">Sobrancelha - 05min</label>
+            </div>
+          </div>
+        </div>
+        <!-- Colorações -->
+        <div class="service-group">
+          <h4>Colorações</h4>
+          <div class="space-y-2">
+            <div>
+              <input type="checkbox" id="coloracao-feminina" name="services" value="Coloração Feminina - 1h00min">
+              <label for="coloracao-feminina" class="ml-2">Coloração Feminina - 1h00min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="coloracao-masculina" name="services" value="Coloração Masculina - 40min">
+              <label for="coloracao-masculina" class="ml-2">Coloração Masculina - 40min</label>
+            </div>
+          </div>
+        </div>
+        <!-- Químicas e Alisamentos -->
+        <div class="service-group">
+          <h4>Químicas e Alisamentos</h4>
+          <div class="space-y-2">
+            <div>
+              <input type="checkbox" id="alisamento-americano" name="services" value="Alisamento Americano - 30min">
+              <label for="alisamento-americano" class="ml-2">Alisamento Americano - 30min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="botox" name="services" value="Botox - 1h00min">
+              <label for="botox" class="ml-2">Botox - 1h00min</label>
+            </div>
+            <div>
+              <input type="checkbox" id="progressiva" name="services" value="Progressiva - 1h00min">
+              <label for="progressiva" class="ml-2">Progressiva - 1h00min</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Calendário -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Data:</label>
+        <div id="calendar" class="calendar"></div>
+        <input type="hidden" id="selected-date">
+        <p id="dayOfWeek" class="mt-1 text-sm text-gray-600"></p>
+      </div>
+      <div class="mb-4">
+        <label for="time" class="block text-sm font-medium text-gray-700">Horário:</label>
+        <select id="time" class="mt-1 p-2 border rounded-lg w-full" required>
+          <option value="">Selecione um horário</option>
+        </select>
+      </div>
+      <button onclick="saveAppointment()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Agendar</button>
+
+      <!-- Agendamentos do Usuário -->
+      <div class="mt-8">
+        <h3 class="text-xl font-semibold mb-2">Seus Agendamentos</h3>
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="border p-2 text-left">Data</th>
+              <th class="border p-2 text-left">Horário</th>
+              <th class="border p-2 text-left">Serviços</th>
+              <th class="border p-2 text-left">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="userAppointmentsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Verificar se há usuário logado
+    const currentUser = localStorage.getItem('currentUser');
+    const currentUserFullName = localStorage.getItem('currentUserFullName');
+    const currentUserPhone = localStorage.getItem('currentUserPhone');
+    if (currentUser && currentUserFullName && currentUserPhone) {
+      showScreen('agendamento');
+      document.getElementById('user-full-name').textContent = currentUserFullName;
+      document.getElementById('user-cpf').textContent = formatCPF(currentUser);
+      document.getElementById('user-phone').textContent = formatPhone(currentUserPhone);
+      loadUserAppointments();
+      renderCalendar(new Date());
+    } else {
+      showScreen('login');
+    }
+
+    // Mostrar/esconder telas
+    function showScreen(screenId) {
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('agendamento').classList.add('hidden');
+      document.getElementById(screenId).classList.remove('hidden');
+      if (screenId === 'agendamento') {
+        loadUserAppointments();
+        renderCalendar(new Date());
+        updateTimeOptions(document.getElementById('selected-date').value);
+      }
+    }
+
+    // Formatador de CPF para exibição
+    function formatCPF(cpf) {
+      cpf = cpf.replace(/[^\d]/g, '');
+      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+
+    // Formatador de telefone para exibição
+    function formatPhone(phone) {
+      const cleanPhone = phone.replace(/[^\d]/g, '');
+      if (cleanPhone.length === 11) {
+        return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      }
+      return phone;
+    }
+
+    // Validar nome completo
+    function validateFullName(name) {
+      const trimmedName = name.trim();
+      const nameParts = trimmedName.split(/\s+/);
+      if (nameParts.length < 2) return false;
+      return nameParts.every(part => /^[a-zA-ZÀ-ÿ]{2,}$/.test(part));
+    }
+
+    // Validar CPF
+    function validateCPF(cpf) {
+      cpf = cpf.replace(/[^\d]/g, '');
+      if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+      let sum = 0;
+      for (let i = 0; i < 9; i++) {
+        sum += parseInt(cpf[i]) * (10 - i);
+      }
+      let digit = (sum * 10) % 11;
+      if (digit === 10 || digit === 11) digit = 0;
+      if (digit !== parseInt(cpf[9])) return false;
+
+      sum = 0;
+      for (let i = 0; i < 10; i++) {
+        sum += parseInt(cpf[i]) * (11 - i);
+      }
+      digit = (sum * 10) % 11;
+      if (digit === 10 || digit === 11) digit = 0;
+      return digit === parseInt(cpf[10]);
+    }
+
+    // Login do usuário
+    function loginUser() {
+      const fullName = document.getElementById('full-name').value;
+      const cpf = document.getElementById('cpf').value;
+      const phone = document.getElementById('phone').value;
+
+      if (!validateFullName(fullName)) {
+        alert('Por favor, insira um nome completo válido (mínimo dois nomes, sem números).');
+        return;
+      }
+
+      if (!validateCPF(cpf)) {
+        alert('Por favor, insira um CPF válido (11 dígitos).');
+        return;
+      }
+
+      if (!phone.trim()) {
+        alert('Por favor, insira um número de contato.');
+        return;
+      }
+
+      const cleanCPF = cpf.replace(/[^\d]/g, '');
+      localStorage.setItem('currentUser', cleanCPF);
+      localStorage.setItem('currentUserFullName', fullName.trim());
+      localStorage.setItem('currentUserPhone', phone.trim());
+      document.getElementById('full-name').value = '';
+      document.getElementById('cpf').value = '';
+      document.getElementById('phone').value = '';
+      document.getElementById('user-full-name').textContent = fullName.trim();
+      document.getElementById('user-cpf').textContent = formatCPF(cleanCPF);
+      document.getElementById('user-phone').textContent = formatPhone(phone.trim());
+      showScreen('agendamento');
+      renderCalendar(new Date());
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('currentUserFullName');
+      localStorage.removeItem('currentUserPhone');
+      document.getElementById('user-full-name').textContent = '';
+      document.getElementById('user-cpf').textContent = '';
+      document.getElementById('user-phone').textContent = '';
+      showScreen('login');
+    }
+
+    // Carregar dias disponíveis
+    function getAvailableDays() {
+      return JSON.parse(localStorage.getItem('availableDays')) || {};
+    }
+
+    // Função para obter o dia da semana
+    function getDayOfWeek(dateString) {
+      if (!dateString) return '';
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+      return days[date.getDay()];
+    }
+
+    // Renderizar calendário
+    function renderCalendar(date) {
+      const calendar = document.getElementById('calendar');
+      const availableDays = getAvailableDays();
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDay = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+
+      const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      calendar.innerHTML = `
+        <div class="calendar-header">
+          <button onclick="renderCalendar(new Date(${year}, ${month - 1}, 1))"><</button>
+          <span>${monthNames[month]} ${year}</span>
+          <button onclick="renderCalendar(new Date(${year}, ${month + 1}, 1))">></button>
+        </div>
+        <div class="calendar-grid">
+          <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+        </div>
+      `;
+
+      const grid = calendar.querySelector('.calendar-grid');
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day disabled';
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.textContent = day;
+
+        const currentDate = new Date(year, month, day);
+        if (currentDate < today) {
+          dayDiv.className += ' disabled';
+        } else {
+          const availableHours = availableDays[dateStr]?.filter(hour => 
+            !appointments.some(appt => appt.date === dateStr && appt.time === hour)
+          ) || [];
+          if (availableHours.length > 0) {
+            dayDiv.className += ' available';
+          }
+          dayDiv.onclick = () => selectDate(dateStr);
+        }
+
+        grid.appendChild(dayDiv);
+      }
+
+      const selectedDate = document.getElementById('selected-date').value;
+      if (selectedDate) {
+        const selectedDay = document.querySelector(`.calendar-day:not(.disabled)[textContent="${parseInt(selectedDate.split('-')[2])}"]`);
+        if (selectedDay) selectedDay.className += ' selected';
+      }
+    }
+
+    // Selecionar data
+    function selectDate(dateStr) {
+      document.getElementById('selected-date').value = dateStr;
+      const dayOfWeek = getDayOfWeek(dateStr);
+      document.getElementById('dayOfWeek').textContent = dayOfWeek ? `Dia da semana: ${dayOfWeek}` : '';
+      updateTimeOptions(dateStr);
+
+      const days = document.querySelectorAll('.calendar-day');
+      days.forEach(day => day.classList.remove('selected'));
+      const selectedDay = document.querySelector(`.calendar-day:not(.disabled)[textContent="${parseInt(dateStr.split('-')[2])}"]`);
+      if (selectedDay) selectedDay.className += ' selected';
+    }
+
+    // Atualizar horários disponíveis
+    function updateTimeOptions(dateString) {
+      const timeSelect = document.getElementById('time');
+      timeSelect.innerHTML = '<option value="">Selecione um horário</option>';
+
+      if (!dateString) return;
+
+      const availableDays = getAvailableDays();
+      const hours = availableDays[dateString] || [];
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+
+      const availableHours = hours.filter(hour => {
+        return !appointments.some(appt => appt.date === dateString && appt.time === hour);
+      });
+
+      availableHours.forEach(hour => {
+        const option = document.createElement('option');
+        option.value = hour;
+        option.textContent = hour;
+        timeSelect.appendChild(option);
+      });
+    }
+
+    // Salvar agendamento
+    function saveAppointment() {
+      const date = document.getElementById('selected-date').value;
+      const time = document.getElementById('time').value;
+      const cpf = localStorage.getItem('currentUser');
+      const fullName = localStorage.getItem('currentUserFullName');
+      const phone = localStorage.getItem('currentUserPhone');
+      const services = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(input => input.value);
+
+      if (!services.length) {
+        alert('Por favor, selecione pelo menos um serviço.');
+        return;
+      }
+
+      if (!date || !time || !cpf || !fullName || !phone) {
+        alert('Por favor, preencha todos os campos (data e horário).');
+        return;
+      }
+
+      const availableDays = getAvailableDays();
+      if (!availableDays[date] || !availableDays[date].includes(time)) {
+        alert('Horário ou data inválidos. Escolha um horário disponível.');
+        return;
+      }
+
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      const isBooked = appointments.some(appt => appt.date === date && appt.time === time);
+      if (isBooked) {
+        alert('Este horário já está ocupado. Escolha outro.');
+        return;
+      }
+
+      const appointment = { date, time, cpf, fullName, phone, services };
+      appointments.push(appointment);
+      localStorage.setItem('appointments', JSON.stringify(appointments));
+
+      // Armazenar detalhes do comprovante temporariamente
+      localStorage.setItem('confirmationDetails', JSON.stringify({
+        fullName,
+        date,
+        time,
+        services
+      }));
+
+      // Redirecionar para a página de comprovante
+      window.location.href = 'comprovante.html';
+
+      // Limpar o formulário
+      document.getElementById('selected-date').value = '';
+      document.getElementById('time').value = '';
+      document.getElementById('dayOfWeek').textContent = '';
+      document.querySelectorAll('input[name="services"]').forEach(input => input.checked = false);
+      updateTimeOptions('');
+      renderCalendar(new Date());
+      loadUserAppointments();
+    }
+
+    // Carregar agendamentos do usuário
+    function loadUserAppointments() {
+      const currentUser = localStorage.getItem('currentUser');
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      const tableBody = document.getElementById('userAppointmentsTable');
+      tableBody.innerHTML = '';
+
+      const userAppointments = appointments.filter(appt => appt.cpf === currentUser);
+      userAppointments.forEach((appt, index) => {
+        const globalIndex = appointments.findIndex(a => a.date === appt.date && a.time === appt.time && a.cpf === appt.cpf);
+        const servicesList = appt.services ? appt.services.join(', ') : 'N/A';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="border p-2">${new Date(appt.date).toLocaleDateString('pt-BR')}</td>
+          <td class="border p-2">${appt.time}</td>
+          <td class="border p-2">${servicesList}</td>
+          <td class="border p-2">
+            <button onclick="deleteAppointment(${globalIndex})" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Excluir</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+    // Excluir agendamento
+    function deleteAppointment(index) {
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      appointments.splice(index, 1);
+      localStorage.setItem('appointments', JSON.stringify(appointments));
+      loadUserAppointments();
+      renderCalendar(new Date());
+    }
+  </script>
+</body>
+</html>

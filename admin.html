@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Agendamento - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4">
+    <!-- Navegação -->
+    <nav class="bg-blue-600 p-4 rounded-lg mb-6">
+      <ul class="flex space-x-4 text-white">
+        <li><a href="index.html" class="hover:underline">Fazer Agendamento</a></li>
+        <li><a href="admin.html" class="hover:underline font-bold">Admin</a></li>
+      </ul>
+    </nav>
+
+    <!-- Tela de Login do Admin -->
+    <div id="admin-login" class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4">Login Admin</h2>
+      <div class="mb-4">
+        <label for="admin-password" class="block text-sm font-medium text-gray-700">Senha:</label>
+        <input type="password" id="admin-password" class="mt-1 p-2 border rounded-lg w-full" required>
+      </div>
+      <button onclick="adminLogin()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Entrar</button>
+    </div>
+
+    <!-- Tela de Administração -->
+    <div id="admin-panel" class="hidden bg-white p-6 rounded-lg shadow-md">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Painel de Administração</h2>
+        <button onclick="adminLogout()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Sair</button>
+      </div>
+
+      <!-- Gerenciar Agenda -->
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-2">Gerenciar Agenda</h3>
+        <div class="mb-4">
+          <label for="admin-date" class="block text-sm font-medium text-gray-700">Data:</label>
+          <input type="date" id="admin-date" class="mt-1 p-2 border rounded-lg w-full" min="2025-04-27" required>
+        </div>
+        <div class="mb-4">
+          <label for="admin-time" class="block text-sm font-medium text-gray-700">Horários (separados por vírgula):</label>
+          <input type="text" id="admin-time" class="mt-1 p-2 border rounded-lg w-full" placeholder="08:00, 09:00, 10:00" required>
+        </div>
+        <button onclick="addAvailableDay()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Adicionar Dia</button>
+
+        <!-- Lista de Dias Disponíveis -->
+        <div class="mt-6">
+          <h4 class="text-lg font-semibold mb-2">Dias Disponíveis</h4>
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-200">
+                <th class="border p-2 text-left">Data</th>
+                <th class="border p-2 text-left">Horários</th>
+                <th class="border p-2 text-left">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="availableDaysTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Agendamentos -->
+      <div>
+        <h3 class="text-xl font-semibold mb-2">Agendamentos</h3>
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="border p-2 text-left">Data</th>
+              <th class="border p-2 text-left">Horário</th>
+              <th class="border p-2 text-left">Nome</th>
+              <th class="border p-2 text-left">CPF</th>
+              <th class="border p-2 text-left">Serviços</th>
+              <th class="border p-2 text-left">Contato</th>
+              <th class="border p-2 text-left">Status</th>
+              <th class="border p-2 text-left">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="adminAppointmentsTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Modal para Editar Horários -->
+      <div id="editTimesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+          <h3 class="text-xl font-semibold mb-4">Editar Horários</h3>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Data:</label>
+            <p id="edit-date" class="mt-1 text-sm text-gray-700"></p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Horários Disponíveis:</label>
+            <ul id="edit-times-list" class="list-disc pl-5 mt-1"></ul>
+          </div>
+          <div class="mb-4">
+            <label for="new-time" class="block text-sm font-medium text-gray-700">Adicionar Novo Horário:</label>
+            <input type="text" id="new-time" class="mt-1 p-2 border rounded-lg w-full" placeholder="Ex: 10:00">
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button onclick="addNewTime()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Adicionar Horário</button>
+            <button onclick="saveEditedTimes()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Salvar</button>
+            <button onclick="closeEditModal()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Verificar se o admin está logado
+      if (localStorage.getItem('adminLoggedIn') === 'true') {
+        showScreen('admin-panel');
+        loadAdminAppointments();
+        loadAvailableDays();
+      } else {
+        showScreen('admin-login');
+      }
+
+      // Mostrar/esconder telas
+      function showScreen(screenId) {
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-panel').classList.add('hidden');
+        document.getElementById(screenId).classList.remove('hidden');
+        if (screenId === 'admin-panel') {
+          loadAdminAppointments();
+          loadAvailableDays();
+        }
+      }
+
+      // Login do admin
+      function adminLogin() {
+        const password = document.getElementById('admin-password').value;
+        if (password === 'admin123') {
+          localStorage.setItem('adminLoggedIn', 'true');
+          document.getElementById('admin-password').value = '';
+          showScreen('admin-panel');
+        } else {
+          alert('Senha incorreta.');
+        }
+      }
+
+      // Logout do admin
+      function adminLogout() {
+        localStorage.removeItem('adminLoggedIn');
+        showScreen('admin-login');
+      }
+
+      // Formatador de CPF para exibição
+      function formatCPF(cpf) {
+        cpf = cpf.replace(/[^\d]/g, '');
+        return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      }
+
+      // Formatador de telefone para exibição
+      function formatPhone(phone) {
+        const cleanPhone = phone.replace(/[^\d]/g, '');
+        if (cleanPhone.length === 11) {
+          return cleanPhone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        }
+        return phone;
+      }
+
+      // Adicionar dia disponível
+      function addAvailableDay() {
+        const date = document.getElementById('admin-date').value;
+        const times = document.getElementById('admin-time').value.split(',').map(t => t.trim()).filter(t => t);
+
+        if (!date || times.length === 0) {
+          alert('Por favor, preencha a data e pelo menos um horário.');
+          return;
+        }
+
+        // Validar formato dos horários
+        const invalidTimes = times.filter(time => !/^\d{2}:\d{2}$/.test(time));
+        if (invalidTimes.length > 0) {
+          alert('Por favor, insira os horários no formato HH:MM (ex: 08:00).');
+          return;
+        }
+
+        // Verificar duplicatas
+        const uniqueTimes = [...new Set(times)];
+        if (uniqueTimes.length !== times.length) {
+          alert('Horários duplicados detectados. Por favor, insira horários únicos.');
+          return;
+        }
+
+        const availableDays = JSON.parse(localStorage.getItem('availableDays') || '{}');
+        availableDays[date] = uniqueTimes.sort(); // Ordenar horários para consistência
+        localStorage.setItem('availableDays', JSON.stringify(availableDays));
+        document.getElementById('admin-date').value = '';
+        document.getElementById('admin-time').value = '';
+        alert('Dia adicionado com sucesso!');
+        loadAvailableDays();
+      }
+
+      // Carregar dias disponíveis
+      function loadAvailableDays() {
+        const availableDays = JSON.parse(localStorage.getItem('availableDays') || '{}');
+        const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+        const tableBody = document.getElementById('availableDaysTable');
+        tableBody.innerHTML = '';
+
+        // Ordenar datas cronologicamente
+        Object.keys(availableDays).sort((a, b) => new Date(a) - new Date(b)).forEach(date => {
+          const times = availableDays[date].map(time => {
+            const isAvailable = !appointments.some(appt => appt.date === date && appt.time === time);
+            return `<span class="${isAvailable ? 'font-bold' : ''}">${time}</span>`;
+          }).join(', ');
+          // Criar data ajustada para o fuso horário local
+          const [year, month, day] = date.split('-').map(Number);
+          const localDate = new Date(year, month - 1, day);
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="border p-2">${localDate.toLocaleDateString('pt-BR')}</td>
+            <td class="border p-2">${times}</td>
+            <td class="border p-2 flex space-x-2">
+              <button onclick="editAvailableDay('${date}')" class="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700">Editar</button>
+              <button onclick="deleteAvailableDay('${date}')" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Excluir</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Verificar se há agendamentos para um dia ou horário específico
+      function hasAppointmentsForDayOrTime(date, time = null) {
+        const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+        if (time) {
+          return appointments.some(appt => appt.date === date && appt.time === time);
+        }
+        return appointments.some(appt => appt.date === date);
+      }
+
+      // Excluir dia disponível
+      function deleteAvailableDay(date) {
+        if (hasAppointmentsForDayOrTime(date)) {
+          alert('Não é possível excluir este dia, pois há agendamentos associados.');
+          return;
+        }
+        const availableDays = JSON.parse(localStorage.getItem('availableDays') || '{}');
+        delete availableDays[date];
+        localStorage.setItem('availableDays', JSON.stringify(availableDays));
+        loadAvailableDays();
+      }
+
+      // Editar horários de um dia
+      let currentEditDate = null;
+      let currentEditTimes = [];
+
+      function editAvailableDay(date) {
+        currentEditDate = date;
+        const availableDays = JSON.parse(localStorage.getItem('availableDays') || '{}');
+        currentEditTimes = availableDays[date] || [];
+        // Criar data ajustada para o fuso horário local
+        const [year, month, day] = date.split('-').map(Number);
+        const localDate = new Date(year, month - 1, day);
+        document.getElementById('edit-date').textContent = localDate.toLocaleDateString('pt-BR');
+        updateEditTimesList();
+        document.getElementById('editTimesModal').classList.remove('hidden');
+      }
+
+      function updateEditTimesList() {
+        const timesList = document.getElementById('edit-times-list');
+        timesList.innerHTML = '';
+        currentEditTimes.forEach((time, index) => {
+          const li = document.createElement('li');
+          li.className = 'flex justify-between items-center';
+          li.innerHTML = `
+            ${time}
+            <button onclick="removeTime(${index})" class="text-red-600 hover:text-red-800">Remover</button>
+          `;
+          timesList.appendChild(li);
+        });
+      }
+
+      function removeTime(index) {
+        const timeToRemove = currentEditTimes[index];
+        if (hasAppointmentsForDayOrTime(currentEditDate, timeToRemove)) {
+          alert(`Não é possível remover o horário ${timeToRemove}, pois há um agendamento associado.`);
+          return;
+        }
+        currentEditTimes.splice(index, 1);
+        updateEditTimesList();
+      }
+
+      function addNewTime() {
+        const newTime = document.getElementById('new-time').value.trim();
+        if (!newTime) {
+          alert('Por favor, insira um horário válido.');
+          return;
+        }
+        if (!/^\d{2}:\d{2}$/.test(newTime)) {
+          alert('Por favor, insira o horário no formato HH:MM (ex: 10:00).');
+          return;
+        }
+        if (currentEditTimes.includes(newTime)) {
+          alert('Este horário já está na lista.');
+          return;
+        }
+        currentEditTimes.push(newTime);
+        currentEditTimes.sort();
+        document.getElementById('new-time').value = '';
+        updateEditTimesList();
+      }
+
+      function saveEditedTimes() {
+        if (currentEditTimes.length === 0) {
+          alert('Por favor, mantenha pelo menos um horário ou exclua o dia.');
+          return;
+        }
+        const availableDays = JSON.parse(localStorage.getItem('availableDays') || '{}');
+        availableDays[currentEditDate] = currentEditTimes;
+        localStorage.setItem('availableDays', JSON.stringify(availableDays));
+        closeEditModal();
+        loadAvailableDays();
+        alert('Horários atualizados com sucesso!');
+      }
+
+      function closeEditModal() {
+        document.getElementById('editTimesModal').classList.add('hidden');
+        currentEditDate = null;
+        currentEditTimes = [];
+        document.getElementById('new-time').value = '';
+      }
+
+      // Alterar status do agendamento
+      function changeAppointmentStatus(index, status) {
+        const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+        appointments[index].status = status;
+        localStorage.setItem('appointments', JSON.stringify(appointments));
+        loadAdminAppointments();
+      }
+
+      // Carregar agendamentos
+      function loadAdminAppointments() {
+        const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+        const tableBody = document.getElementById('adminAppointmentsTable');
+        tableBody.innerHTML = '';
+
+        // Ordenar agendamentos por data e horário
+        appointments.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateA - dateB; // Ordenar por data
+          }
+          return a.time.localeCompare(b.time); // Mesma data, ordenar por horário
+        });
+
+        appointments.forEach((appt, index) => {
+          const servicesList = appt.services ? appt.services.join(', ') : 'N/A';
+          // Criar data ajustada para o fuso horário local
+          const [year, month, day] = appt.date.split('-').map(Number);
+          const localDate = new Date(year, month - 1, day);
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="border p-2">${localDate.toLocaleDateString('pt-BR')}</td>
+            <td class="border p-2">${appt.time}</td>
+            <td class="border p-2">${appt.fullName || 'N/A'}</td>
+            <td class="border p-2">${formatCPF(appt.cpf)}</td>
+            <td class="border p-2">${servicesList}</td>
+            <td class="border p-2">${appt.phone ? formatPhone(appt.phone) : 'N/A'}</td>
+            <td class="border p-2">
+              <select onchange="changeAppointmentStatus(${index}, this.value)" class="p-1 border rounded">
+                <option value="Pendente" ${appt.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                <option value="Atendido" ${appt.status === 'Atendido' ? 'selected' : ''}>Atendido</option>
+                <option value="Não Atendido" ${appt.status === 'Não Atendido' ? 'selected' : ''}>Não Atendido</option>
+              </select>
+            </td>
+            <td class="border p-2">
+              <button onclick="deleteAppointment(${index})" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Excluir</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Excluir agendamento
+      function deleteAppointment(index) {
+        const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+        appointments.splice(index, 1);
+        localStorage.setItem('appointments', JSON.stringify(appointments));
+        loadAdminAppointments();
+        loadAvailableDays();
+      }
+    </script>
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93725b9dba62b08b',t:'MTc0NTc5OTI0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>

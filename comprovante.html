@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Agendamento - Comprovante</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4">
+    <!-- Navegação -->
+    <nav class="bg-blue-600 p-4 rounded-lg mb-6">
+      <ul class="flex space-x-4 text-white">
+        <li><a href="index.html" class="hover:underline">Fazer Agendamento</a></li>
+        <li><a href="admin.html" class="hover:underline">Admin</a></li>
+      </ul>
+    </nav>
+
+    <!-- Tela de Comprovante -->
+    <div id="confirmation" class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4 text-green-800">Agendamento Realizado!</h2>
+      <div class="mb-4">
+        <p class="text-sm text-gray-700"><strong>Nome Completo:</strong> <span id="confirmation-full-name"></span></p>
+        <p class="text-sm text-gray-700"><strong>Data:</strong> <span id="confirmation-date"></span></p>
+        <p class="text-sm text-gray-700"><strong>Dia da Semana:</strong> <span id="confirmation-day-of-week"></span></p>
+        <p class="text-sm text-gray-700"><strong>Horário:</strong> <span id="confirmation-time"></span></p>
+        <p class="text-sm text-gray-700"><strong>Serviços:</strong> <span id="confirmation-services"></span></p>
+      </div>
+      <button onclick="returnToScheduling()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Voltar</button>
+    </div>
+  </div>
+
+  <script>
+    // Função para obter o dia da semana
+    function getDayOfWeek(dateString) {
+      if (!dateString) return '';
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+      return days[date.getDay()];
+    }
+
+    // Carregar detalhes do comprovante
+    window.onload = function() {
+      const confirmationDetails = JSON.parse(localStorage.getItem('confirmationDetails') || '{}');
+      if (confirmationDetails.fullName && confirmationDetails.date && confirmationDetails.time && confirmationDetails.services) {
+        document.getElementById('confirmation-full-name').textContent = confirmationDetails.fullName;
+        document.getElementById('confirmation-date').textContent = new Date(confirmationDetails.date).toLocaleDateString('pt-BR');
+        document.getElementById('confirmation-day-of-week').textContent = getDayOfWeek(confirmationDetails.date);
+        document.getElementById('confirmation-time').textContent = confirmationDetails.time;
+        document.getElementById('confirmation-services').textContent = confirmationDetails.services.join(', ');
+      } else {
+        // Redirecionar para index.html se não houver detalhes
+        window.location.href = 'index.html';
+      }
+    };
+
+    // Voltar para a tela de agendamento
+    function returnToScheduling() {
+      localStorage.removeItem('confirmationDetails');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

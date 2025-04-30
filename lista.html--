@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Agendamento - Ver Agendamentos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4">
+    <!-- Navegação -->
+    <nav class="bg-blue-600 p-4 rounded-lg mb-6">
+      <ul class="flex space-x-4 text-white">
+        <li><a href="index.html" class="hover:underline">Fazer Agendamento</a></li>
+        <li><a href="lista.html" class="hover:underline font-bold">Ver Agendamentos</a></li>
+        <li><a href="admin.html" class="hover:underline">Admin</a></li>
+      </ul>
+    </nav>
+
+    <!-- Tela de Lista de Agendamentos -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold mb-4">Agendamentos Realizados</h2>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="border p-2 text-left">Data</th>
+            <th class="border p-2 text-left">Horário</th>
+            <th class="border p-2 text-left">Nome</th>
+            <th class="border p-2 text-left">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="appointmentsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Carregar agendamentos
+    function loadAppointments() {
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      const tableBody = document.getElementById('appointmentsTable');
+      tableBody.innerHTML = '';
+
+      appointments.forEach((appt, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="border p-2">${new Date(appt.date).toLocaleDateString('pt-BR')}</td>
+          <td class="border p-2">${appt.time}</td>
+          <td class="border p-2">${appt.name}</td>
+          <td class="border p-2">
+            <button onclick="deleteAppointment(${index})" class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Excluir</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Excluir agendamento
+    function deleteAppointment(index) {
+      const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+      appointments.splice(index, 1);
+      localStorage.setItem('appointments', JSON.stringify(appointments));
+      loadAppointments();
+    }
+
+    // Carregar agendamentos ao abrir a página
+    loadAppointments();
+  </script>
+</body>
+</html>
